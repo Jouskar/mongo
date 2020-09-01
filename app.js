@@ -4,6 +4,8 @@ const app = express();
 const bodyParser = require('body-parser');
 const path = require('path');
 
+const mongoose = require('mongoose');
+
 app.use(bodyParser.json());
 
 const mongoConnect = require('./utilities/database').mongoConnect;
@@ -64,6 +66,14 @@ app.delete('/users', (req, res)=>{
         })
         .catch(err=>{console.log(err)});
 });
+
 mongoConnect(() => {
     app.listen(3000);
 });
+
+/*mongoose.connect('mongodb+srv://tolgahan:DBwuBDMzvQ6FnY2d@cluster0.o8gvf.mongodb.net/test?retryWrites=true&w=majority')
+    .then(()=> {
+        console.log('connected to mongodb');
+        app.listen(3000);
+    })
+    .catch(err => {console.log(err)});*/
