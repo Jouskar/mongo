@@ -13,27 +13,32 @@ const Post = require('./models/post');
 const User = require('./models/user');
 
 //Post Functions
-app.post('/posts', (req, res)=> {
-    const id = req.body.id;
+app.post('/posts', async (req, res)=> {
     const title = req.body.title;
     const body = req.body.body;
-    
-    const post = new Post(id, title, body);
-    post.save();
-    res.send();
+
+    const post = new Post(
+        {
+            title: title,
+            body: body
+        }
+    );
+
+    let newPost = await post.save();
+    res.send(newPost);
 });
 
 app.get('/posts', (req, res)=>{
-    Post.findAll()
+    Post.find()
         .then(posts => {
             res.send(posts);
         });    
 });
 
 app.delete('/posts', (req, res)=>{
-    const id = req.body.id;
+    const title = req.body.title;
 
-    Post.deleteById(id)
+    Post.deleteOne({title: title})
         .then(() => {
             res.send("success");
         })
@@ -41,39 +46,56 @@ app.delete('/posts', (req, res)=>{
 });
 
 //User Functions
-app.post('/users', (req, res)=> {
-    const id = req.body.id;
+app.post('/users', async (req, res)=> {
     const name = req.body.name;
+    const email = req.body.email;
     
-    const user = new User(id, name);
-    user.save();
-    res.send();
+    User.findOne({name: name}, async (err, user)=> {
+        if (err) {
+            console.log(err);
+        }
+        if (user) {
+            res.send("Kullanıcı zaten mevcut!");
+        }
+        else {
+            const user = new User(
+                {
+                    name: name,
+                    email: email
+                }
+            );
+            let newUser = await user.save();
+            res.send(newUser);
+        }
+    })
+
+    
 });
 
 app.get('/users', (req, res)=>{
-    User.findAll()
+    User.find()
         .then(posts => {
             res.send(posts);
         });    
 });
 
 app.delete('/users', (req, res)=>{
-    const id = req.body.id;
+    const name = req.body.name;
 
-    User.deleteById(id)
+    User.deleteOne(name)
         .then(() => {
             res.send("success");
         })
         .catch(err=>{console.log(err)});
 });
 
-mongoConnect(() => {
+/*mongoConnect(() => {
     app.listen(3000);
-});
+});*/
 
-/*mongoose.connect('mongodb+srv://tolgahan:DBwuBDMzvQ6FnY2d@cluster0.o8gvf.mongodb.net/test?retryWrites=true&w=majority')
+mongoose.connect('mongodb+srv://tolgahan:DBwuBDMzvQ6FnY2d@cluster0.o8gvf.mongodb.net/test?retryWrites=true&w=majority')
     .then(()=> {
         console.log('connected to mongodb');
         app.listen(3000);
     })
-    .catch(err => {console.log(err)});*/
+    .catch(err => {console.log(err)});

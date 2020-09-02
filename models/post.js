@@ -1,4 +1,28 @@
-const { mongoConnect } = require('../utilities/database');
+const mongoose = require('mongoose');
+
+const postSchema = mongoose.Schema({
+    id: {
+        type: String,
+        required: true
+    },
+    title: {
+        type: String,
+        required: true
+    },
+    body: {
+        type: String,
+        required: true
+    }    
+});
+
+module.exports = mongoose.model('Post', postSchema);
+
+
+
+
+
+
+/*const { mongoConnect } = require('../utilities/database');
 
 const getDb = require('../utilities/database').getdb;
 
@@ -42,4 +66,4 @@ class Post{
     }
 }
 
-module.exports = Post;
+module.exports = Post;*/
