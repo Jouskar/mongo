@@ -1,20 +1,27 @@
 const Post = require('../model/post');
 const User = require('../model/user');
+const CustomError = require('./error');
+const CustomSuccess = require('./success');
 
 //Post Functions
 exports.postAddPosts = async (req, res)=> {
-    const title = req.body.title;
-    const body = req.body.body;
+    try {
+        const title = req.body.title;
+        const body = req.body.body;
 
-    const post = new Post(
-        {
-            title: title,
-            body: body
-        }
-    );
+        const post = new Post(
+            {
+                title: title,
+                body: body
+            }
+        );
 
-    let newPost = await post.save();
-    res.send(newPost);
+        let newPost = await post.save();
+        res.send(newPost);
+    }
+    catch(err) {
+        res.send(new CustomError(err.message));
+    }
 };
 
 exports.getPosts = (req, res)=>{
@@ -29,7 +36,7 @@ exports.deleteOnePost = (req, res)=>{
 
     Post.deleteOne({title: title})
         .then(() => {
-            res.send("success");
+            res.send(new CustomSuccess('Post başarıyla silindi.'));
         })
         .catch(err=>{console.log(err)});
 };
@@ -44,7 +51,7 @@ exports.postAddUser = async (req, res)=> {
             console.log(err);
         }
         if (user) {
-            res.send("Kullanıcı zaten mevcut!");
+            res.send(new CustomError("Kullanıcı zaten mevcut!", 409));
         }
         else {
             const user = new User(
@@ -69,9 +76,9 @@ exports.getUsers = (req, res)=>{
 exports.deleteOneUser = (req, res)=>{
     const name = req.body.name;
 
-    User.deleteOne(name)
+    User.deleteOne({name: name})
         .then(() => {
-            res.send("success");
+            res.send(new CustomSuccess('Kullanıcı başarıyla silindi.'));
         })
         .catch(err=>{console.log(err)});
 };
