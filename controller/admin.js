@@ -1,13 +1,18 @@
 const Post = require('../model/post');
 const User = require('../model/user');
-const CustomError = require('./error');
-const CustomSuccess = require('./success');
+const { CustomError, BadRequest, NotFound } = require('../utils/error');
+const CustomSuccess = require('../utils/success');
 
 //Post Functions
-exports.postAddPosts = async (req, res)=> {
+exports.postAddPosts = async (req, res, next)=> {
+    const title = req.body.title;
+    const body = req.body.body;
+
     try {
-        const title = req.body.title;
-        const body = req.body.body;
+
+        if (!title || !body) {
+            throw new CustomError('Gerekli alanlar eksik!');
+        }
 
         const post = new Post(
             {
@@ -17,18 +22,21 @@ exports.postAddPosts = async (req, res)=> {
         );
 
         let newPost = await post.save();
-        res.send(newPost);
+        res.json(newPost);
     }
     catch(err) {
-        res.send(new CustomError(err.message));
+        next(err);
     }
 };
 
-exports.getPosts = (req, res)=>{
+exports.getPosts = (req, res, next)=>{
     Post.find()
         .then(posts => {
-            res.send(posts);
-        });    
+            if (posts.length == 0) {
+                throw new NotFound("Kullanıcı verileri boş!");
+            }
+            res.json(posts);
+        }).catch(err=> {next(err)});
 };
 
 exports.deleteOnePost = (req, res)=>{
@@ -36,22 +44,21 @@ exports.deleteOnePost = (req, res)=>{
 
     Post.deleteOne({title: title})
         .then(() => {
-            res.send(new CustomSuccess('Post başarıyla silindi.'));
+            res.json(new CustomSuccess('Post başarıyla silindi.'));
         })
         .catch(err=>{console.log(err)});
 };
 
 //User Functions
-exports.postAddUser = async (req, res)=> {
+exports.postAddUser = async (req, res, next)=> {
     const name = req.body.name;
     const email = req.body.email;
-    
-    User.findOne({name: name}, async (err, user)=> {
-        if (err) {
-            console.log(err);
-        }
-        if (user) {
-            res.send(new CustomError("Kullanıcı zaten mevcut!", 409));
+
+    try {
+        const userFind = await User.findOne({name: name});
+
+        if (userFind) {
+            throw new CustomError("Kullanıcı zaten mevcut!");
         }
         else {
             const user = new User(
@@ -63,14 +70,20 @@ exports.postAddUser = async (req, res)=> {
             let newUser = await user.save();
             res.send(newUser);
         }
-    });    
+    }
+    catch(err) {
+        next(err);
+    }
 };
 
-exports.getUsers = (req, res)=>{
+exports.getUsers = (req, res, next)=>{
     User.find()
-        .then(posts => {
-            res.send(posts);
-        });    
+        .then(users => {
+            if (users.length == 0) {
+                throw new NotFound("Kullanıcı verileri boş!");
+            }
+            res.json(users);
+        }).catch(err=> {next(err)});
 };
 
 exports.deleteOneUser = (req, res)=>{
@@ -82,4 +95,3 @@ exports.deleteOneUser = (req, res)=>{
         })
         .catch(err=>{console.log(err)});
 };
-
